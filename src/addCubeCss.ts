@@ -1,5 +1,7 @@
 import { cubesArray } from './cubes';
-
+const iconSize = 224;
+const iconWidth = 140;
+const iconHeight = 170;
 const cubeStyles = document.createElement('style');
 document.head.appendChild(cubeStyles);
 const rules: string[] = [];
@@ -10,10 +12,10 @@ cubesArray.forEach(({ code, icon }, index) => {
         border-color: black;
         border-width: 1px;
         background-image: url('${icon.file}');
-        width: 120px;
-        height: 174px;
+        width: ${iconWidth}px;
+        height: ${iconHeight}px;
         border-style: solid;
-        background-position: -${icon.x * 224}px -${icon.y * 224}px;
+        background-position: -${icon.x * iconSize}px -${icon.y * iconSize}px;
     }`;
   rules.push(rule);
 });
@@ -22,8 +24,8 @@ rules.push(`
     .cubeNone {
         border-color: black;
         border-width: 1px;
-        width: 120px;
-        height: 174px;
+        width: ${iconWidth}px;
+        height: ${iconHeight}px;
         border-style: solid;
     }`);
 rules.push(`
@@ -31,8 +33,8 @@ rules.push(`
         border-color: black;
         background-color: #ccc;
         border-width: 1px;
-        width: 120px;
-        height: 174px;
+        width: ${iconWidth}px;
+        height: ${iconHeight}px;
         border-style: solid;
     }`);
 // @ts-expect-error typescript is not smart enough to know that this is not null

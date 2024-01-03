@@ -144,7 +144,7 @@ export const solveRoute = (route: Route, cubeSet: CubeSet): SolutionCell[] => {
   route.forEach(cell => {
     const matches = findAllMatchesForCell(cell, cubeSet);
     const match = matches[0];
-    if (match) {
+    if (matches.length > 0) {
       const { cubeCode, rotation, flipped } = match.flipRotations[0];
       return result.push({ coordinates: cell.coordinates, cubeCode, rotation, flipped });
     } else {
@@ -176,6 +176,7 @@ export const renderSolution = (solution: SolutionCell[]): void => {
           element.className = `cube-${cell.cubeCode}`;
         } else {
           element.className = 'cubeNone';
+          // check if there is a cube in the next layer
           for (let zi = z + 1; zi <= maxZ; zi++) {
             if (solution.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === zi) != null) {
               element.className = 'cube-1';
@@ -194,6 +195,9 @@ export const renderSolution = (solution: SolutionCell[]): void => {
   layers.forEach((layer, index) => {
     const layerTable = document.createElement('table');
     layerTable.className = `layer-${index}`;
+    const header = document.createElement('th');
+    header.innerText = `Layer ${index + 1}`;
+    layerTable.appendChild(header);
     layer.forEach(row => {
       const newRow = document.createElement('tr');
       row.forEach(cell => {
@@ -201,15 +205,6 @@ export const renderSolution = (solution: SolutionCell[]): void => {
       });
       layerTable.appendChild(newRow);
     });
-    app?.appendChild(layerTable);
-    app?.appendChild(document.createElement('hr'));
+    app?.prepend(layerTable);
   });
-  // solution.forEach(({ cubeCode, coordinates, flipped, rotation }) => {
-  //   const text = JSON.stringify({ ...coordinates, flipped: flipped || undefined, rotation });
-  //   const newDiv = document.createElement('div');
-  //   newDiv.className = `cube-${cubeCode}`;
-  //   const newContent = document.createTextNode(text);
-  //   newDiv.appendChild(newContent);
-  //   app?.appendChild(newDiv);
-  // });
 };
