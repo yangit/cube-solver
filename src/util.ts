@@ -214,6 +214,7 @@ const bruteForceSolution = (multiCubeMatches: MultiSolution, cubeSet: CubeSet): 
   const result = tryAllCombinations(cubeCodes, cubeSet);
   if (result !== null) {
     console.log('bruteforce success', result);
+    result.forEach(cubeCode => takeCubeFromSet(cubeSet, cubeCode));
 
     return result.map((cubeCode, index) => {
       const { rotation, flipped } = sortedMultiCubeMatches[index].cubeMatches[0].flipRotations[0];

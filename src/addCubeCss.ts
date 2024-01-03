@@ -40,7 +40,7 @@ rules.push(`
 rules.push(`
     .cubeMulti {
         border-color: black;
-        background-color: lightgreen;
+        background-color: lightblue;
         border-width: 1px;
         width: ${iconWidth}px;
         height: ${iconHeight}px;
