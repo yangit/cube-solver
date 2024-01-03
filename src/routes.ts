@@ -6,10 +6,8 @@ export const cuboroProRoute: Route = [
     rules: [
       { in: { level: 'a', side: 3 }, out: { level: 'a', side: 4 } },
       { in: { level: 'b', side: 4 }, out: { level: 'c', side: 2 } },
-
     ],
   },
-
   {
     coordinates: { x: 2, y: 0, z: 1 },
     rules: [
@@ -26,7 +24,6 @@ export const cuboroProRoute: Route = [
       { in: { level: 'c', side: 2 }, out: { level: 'c', side: 3 } },
     ],
   },
-
   {
     coordinates: { x: 0, y: 0, z: 1 },
     rules: [
@@ -53,7 +50,6 @@ export const cuboroProRoute: Route = [
     rules: [
       { in: { level: 'a', side: 2 }, out: { level: 'a', side: 4 } },
       { in: { level: 'b', side: 2 }, out: { level: 'b', side: 4 } },
-
     ],
   },
   {
@@ -61,7 +57,6 @@ export const cuboroProRoute: Route = [
     rules: [
       { in: { level: 'a', side: 1 }, out: { level: 'a', side: 2 } },
       { in: { level: 'b', side: 4 }, out: { level: 'b', side: 2 } },
-
     ],
   },
   {

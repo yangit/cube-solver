@@ -335,3 +335,6 @@ export const renderSolution = ({ solution, meta }: { solution: Solution, meta: C
     app?.prepend(layerTable);
   });
 };
+export const pathToRoute = (path: string): Route => {
+
+};
