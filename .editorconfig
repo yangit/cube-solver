@@ -1,0 +1,4 @@
+# Indentation override
+[config/flactyl.keymap]
+indent_style = tab
+indent_size = 4
