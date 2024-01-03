@@ -37,5 +37,14 @@ rules.push(`
         height: ${iconHeight}px;
         border-style: solid;
     }`);
+rules.push(`
+    .cubeMulti {
+        border-color: black;
+        background-color: lightgreen;
+        border-width: 1px;
+        width: ${iconWidth}px;
+        height: ${iconHeight}px;
+        border-style: solid;
+    }`);
 // @ts-expect-error typescript is not smart enough to know that this is not null
 rules.forEach((rule, index) => cubeStyles.sheet.insertRule(rule, index));

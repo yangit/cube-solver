@@ -17,11 +17,14 @@ export const cuboroProSet: CubeSet = {
     78: 1,
     mk: 1,
   },
+  usedCubes: {},
+  remaningCubes: {},
 };
 const cubeSets = [cuboroProSet];
 
 cubeSets.forEach(cubeSet => {
   cubeSet.cubeCount = Object.values(cubeSet.cubes).reduce((a, b) => a + b, 0);
+  cubeSet.remaningCubes = { ...cubeSet.cubes };
 });
 
 export default cubeSets;

@@ -3,6 +3,8 @@ import { cuboroProSet } from './cubeSets';
 import { cuboroProRoute } from './routes';
 import { renderSolution, solveRoute } from './util';
 
-const solution = solveRoute(cuboroProRoute, cuboroProSet);
+const { solution, meta } = solveRoute(cuboroProRoute, cuboroProSet);
+console.log(cuboroProSet);
+
 console.log(solution);
-renderSolution(solution);
+renderSolution({ solution, meta });

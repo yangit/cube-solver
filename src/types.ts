@@ -14,17 +14,29 @@ export interface Coordinates {
   z: number
 }
 export interface Cell { coordinates: Coordinates, rules: Rule[] }
+export interface CellRenderInfo { coordinates: Coordinates, className: string, text?: string }
 export interface SolutionCell {
   coordinates: Coordinates
   cubeCode: string
   rotation: Angle
   flipped: boolean
+  cubeMatches: CubeMatchInfo[]
 }
-export type MaybeSolutionCell = SolutionCell | null;
+export interface MultiSolutionCell {
+  coordinates: Coordinates
+  rotation: Angle
+  flipped: boolean
+  cubeMatches: CubeMatchInfo[]
+}
+export type Solution = SolutionCell[];
+export type MultiSolution = MultiSolutionCell[];
+
 export interface CubeSet {
   name: string
   cubeCount?: number
   cubes: Record<string, number>
+  usedCubes: Record<string, number>
+  remaningCubes: Record<string, number>
 }
 export interface CubeFlipRotataion {
   cubeCode: string

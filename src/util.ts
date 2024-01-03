@@ -1,6 +1,6 @@
 import cubes from './cubes';
-import { type MaybeSolutionCell, type Angle, type Cell, type Cube, type CubeMatchInfo, type CubeSet, type Route, type Rule, type SolutionCell } from './types';
-
+import { type Angle, type Cell, type Cube, type CubeMatchInfo, type CubeSet, type Route, type Rule, type SolutionCell, type Solution, type MultiSolution, type CellRenderInfo } from './types';
+import _ from 'lodash';
 export const bidirectRule = (rule: Rule): Rule[] => {
   const result = [rule];
 
@@ -138,23 +138,183 @@ export const findAllMatchesForCell = (cell: Cell, cubeSet: CubeSet): CubeMatchIn
   });
   return result;
 };
+const takeCubeFromSet = (cubeSet: CubeSet, cubeCode: string): string => {
+  if (typeof cubeSet.cubes[cubeCode] !== 'number') {
+    throw new Error('Cannot take cube from set because it was never there');
+  }
+  if (typeof cubeSet.usedCubes[cubeCode] !== 'number') {
+    cubeSet.usedCubes[cubeCode] = 0;
+  }
+  if (cubeSet.usedCubes[cubeCode] === cubeSet.cubes[cubeCode]) {
+    throw new Error(`Cannot take cube ${cubeCode} from set because stock is empty`);
+  }
+  cubeSet.usedCubes[cubeCode] += 1;
+  cubeSet.remaningCubes[cubeCode] -= 1;
+  return cubeCode;
+};
 
-export const solveRoute = (route: Route, cubeSet: CubeSet): SolutionCell[] => {
-  const result: SolutionCell[] = [];
-  route.forEach(cell => {
-    const matches = findAllMatchesForCell(cell, cubeSet);
-    const match = matches[0];
-    if (matches.length > 0) {
-      const { cubeCode, rotation, flipped } = match.flipRotations[0];
-      return result.push({ coordinates: cell.coordinates, cubeCode, rotation, flipped });
-    } else {
-      throw new Error('Cannot find matching cube for cell');
+const getBruteforceComplexity = (solution: MultiSolution): number => {
+  return solution.map(({ cubeMatches }) => cubeMatches.length).reduce((acc, length) => acc * length, 1);
+};
+
+const getCubeOrders = (solution: Solution): Record<string, number> => {
+  const cubeOrders: Record<string, number> = {};
+  solution.forEach(({ cubeMatches }) => {
+    cubeMatches.forEach(({ cubeCode }) => {
+      if (typeof cubeOrders[cubeCode] === 'undefined') {
+        cubeOrders[cubeCode] = 0;
+      }
+      cubeOrders[cubeCode] += 1;
+    });
+  });
+  return cubeOrders;
+};
+
+const getWeightedCubeOrders = (solution: MultiSolution): Record<string, number> => {
+  const cubeOrders: Record<string, number> = {};
+  solution.forEach(({ cubeMatches }) => {
+    cubeMatches.forEach(({ cubeCode }) => {
+      if (typeof cubeOrders[cubeCode] === 'undefined') {
+        cubeOrders[cubeCode] = 0;
+      }
+      cubeOrders[cubeCode] += 1 / cubeMatches.length;
+    });
+  });
+  return cubeOrders;
+};
+
+const countSingleCubeMatches = (solution: MultiSolution): number => {
+  const count = solution.filter(({ cubeMatches }) => cubeMatches.length === 1).length;
+  // console.log({ count });
+
+  return count;
+};
+
+// let arrays = [
+//   ['a1', 'a2', 'a3'],
+//   ['b1', 'b2', 'b3'],
+//   ['c1', 'c2', 'c3']
+// ];
+
+// for (let i = 0; i < arrays[0].length; i++) {
+//   for (let j = 0; j < arrays[1].length; j++) {
+//     for (let k = 0; k < arrays[2].length; k++) {
+//       console.log(arrays[0][i], arrays[1][j], arrays[2][k]);
+//     }
+//   }
+// }
+
+// let arrays = [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']];
+
+const tryAllCombinations = (arrays: string[][], cubeSet: CubeSet): string[] | null => {
+  const pointers = new Array(arrays.length).fill(0); // array for the pointers, initialized as zero
+
+  let done = false;
+  while (!done) {
+    // Logs the current combination
+    const combination = arrays.map((array, i) => array[pointers[i]]);
+    const success = checkProposedSolution(combination, cubeSet);
+    // console.log(combination);
+    if (success) {
+      return combination;
     }
+
+    for (let i = 0; i < pointers.length; i++) {
+      if (pointers[i] < arrays[i].length - 1) {
+        pointers[i]++;
+        break; // If the pointer was successfully increased, break the loop
+      } else if (i === pointers.length - 1) {
+        done = true; // If all pointers are at max, we're done
+      } else {
+        // If the pointer is at max and there's another array, reset this pointer
+        pointers[i] = 0;
+      }
+    }
+  }
+  return null;
+};
+
+const checkProposedSolution = (cubeCodes: string[], cubeSet: CubeSet): boolean => {
+  // console.log(cubeCodes, cubeSet.remaningCubes);
+  const neededCubes: Record<string, number> = {};
+  cubeCodes.forEach(cubeCode => {
+    if (typeof neededCubes[cubeCode] === 'undefined') {
+      neededCubes[cubeCode] = 0;
+    }
+    neededCubes[cubeCode] += 1;
+  });
+  if (Object.keys(neededCubes).some(cubeCode => cubeSet.remaningCubes[cubeCode] < neededCubes[cubeCode])) {
+    return false;
+  }
+
+  return true;
+};
+const bruteForceSolution = (multiCubeMatches: MultiSolution, cubeSet: CubeSet): Solution => {
+  const sortedMultiCubeMatches = _.sortBy(multiCubeMatches, ({ cubeMatches }) => cubeMatches.length);
+  const cubeCodes = sortedMultiCubeMatches.map(({ cubeMatches }) => cubeMatches.map(({ cubeCode }) => cubeCode));
+  const result = tryAllCombinations(cubeCodes, cubeSet);
+  if (result !== null) {
+    console.log('bruteforce success', result);
+
+    return result.map((cubeCode, index) => {
+      const { rotation, flipped } = sortedMultiCubeMatches[index].cubeMatches[0].flipRotations[0];
+      return { coordinates: sortedMultiCubeMatches[index].coordinates, cubeCode, rotation, flipped, cubeMatches: sortedMultiCubeMatches[index].cubeMatches };
+    });
+  }
+  return [];
+};
+export const solveRoute = (route: Route, cubeSet: CubeSet): { solution: Solution, meta: CellRenderInfo[] } => {
+  const result: Solution = [];
+  // const singleCubeMatches: Solution = [];
+  let multiCubeMatches: MultiSolution = [];
+  // sort multi and single cube matches
+  route.forEach(cell => {
+    const cubeMatches = findAllMatchesForCell(cell, cubeSet);
+    if (cubeMatches.length === 0) {
+      throw new Error('Cannot find matching cube for cell, impossible');
+    }
+    multiCubeMatches.push({ coordinates: cell.coordinates, rotation: 0, flipped: false, cubeMatches });
   });
 
-  return result;
+  // iteratively remove cubes which are easy to satisfy
+  while (countSingleCubeMatches(multiCubeMatches) > 0) {
+    multiCubeMatches = multiCubeMatches.filter(({ cubeMatches, coordinates }) => {
+      if (cubeMatches.length === 1) {
+        // console.log('cc', cubeMatches[0].cubeCode);
+
+        takeCubeFromSet(cubeSet, cubeMatches[0].cubeCode);
+        const { rotation, flipped } = cubeMatches[0].flipRotations[0];
+        result.push({ coordinates, cubeCode: cubeMatches[0].cubeCode, rotation, flipped, cubeMatches });
+        return false;
+      }
+      return cubeMatches.length > 1;
+    });
+    multiCubeMatches = multiCubeMatches.map((cellSolution) => {
+      const newCubeMatches = cellSolution.cubeMatches.filter(({ cubeCode }) => cubeSet.remaningCubes[cubeCode] > 0);
+      return {
+        ...cellSolution,
+        cubeMatches: newCubeMatches,
+      };
+    });
+  }
+
+  multiCubeMatches = _.sortBy(multiCubeMatches, ({ cubeMatches }) => cubeMatches.length);
+
+  // calculate complexity and calculate cube orders
+  const complexity = getBruteforceComplexity(multiCubeMatches);
+  console.log('multi:', multiCubeMatches.map(({ cubeMatches }) => cubeMatches.map(({ cubeCode }) => cubeCode)));
+
+  console.log({ complexity });
+  if (complexity < 1000) {
+    result.push(...bruteForceSolution(multiCubeMatches, cubeSet));
+  } else {
+    console.log(`Too complex ${complexity}`);
+    // throw new Error(`Too complex ${complexity}`);
+  }
+  console.log({ multiCubeMatches });
+  return { solution: result, meta: multiCubeMatches.map(({ coordinates }) => ({ coordinates, className: 'cubeMulti' })) };
 };
-export const renderSolution = (solution: SolutionCell[]): void => {
+export const renderSolution = ({ solution, meta }: { solution: Solution, meta: CellRenderInfo[] }): void => {
   const app = document.getElementById('app');
   const minX = solution.map(({ coordinates }) => coordinates.x).reduce((acc, x) => Math.min(acc, x), 0);
   const maxX = solution.map(({ coordinates }) => coordinates.x).reduce((acc, x) => Math.max(acc, x), 0);
@@ -175,12 +335,17 @@ export const renderSolution = (solution: SolutionCell[]): void => {
         if (typeof cell !== 'undefined') {
           element.className = `cube-${cell.cubeCode}`;
         } else {
-          element.className = 'cubeNone';
-          // check if there is a cube in the next layer
-          for (let zi = z + 1; zi <= maxZ; zi++) {
-            if (solution.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === zi) != null) {
-              element.className = 'cube-1';
-              break;
+          const metaCell = meta.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === z);
+          if (typeof metaCell !== 'undefined') {
+            element.className = metaCell.className;
+          } else {
+            element.className = 'cubeNone';
+            // check if there is a cube in the next layer
+            for (let zi = z + 1; zi <= maxZ; zi++) {
+              if (solution.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === zi) != null) {
+                element.className = 'cube-1';
+                break;
+              }
             }
           }
         }
