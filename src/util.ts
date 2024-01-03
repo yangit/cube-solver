@@ -122,7 +122,7 @@ export const findCubeToCellMatches = (cube: Cube, rules: Rule[]): CubeMatchInfo 
 };
 export const codeToCube = (code: string): Cube => {
   const cube = cubes[code];
-  if (!cube) {
+  if (typeof cube === 'undefined') {
     throw new Error(`Cannot find cube with code ${code}`);
   }
   return cube;
