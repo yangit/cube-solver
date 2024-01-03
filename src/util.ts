@@ -157,54 +157,12 @@ const getBruteforceComplexity = (solution: MultiSolution): number => {
   return solution.map(({ cubeMatches }) => cubeMatches.length).reduce((acc, length) => acc * length, 1);
 };
 
-const getCubeOrders = (solution: Solution): Record<string, number> => {
-  const cubeOrders: Record<string, number> = {};
-  solution.forEach(({ cubeMatches }) => {
-    cubeMatches.forEach(({ cubeCode }) => {
-      if (typeof cubeOrders[cubeCode] === 'undefined') {
-        cubeOrders[cubeCode] = 0;
-      }
-      cubeOrders[cubeCode] += 1;
-    });
-  });
-  return cubeOrders;
-};
-
-const getWeightedCubeOrders = (solution: MultiSolution): Record<string, number> => {
-  const cubeOrders: Record<string, number> = {};
-  solution.forEach(({ cubeMatches }) => {
-    cubeMatches.forEach(({ cubeCode }) => {
-      if (typeof cubeOrders[cubeCode] === 'undefined') {
-        cubeOrders[cubeCode] = 0;
-      }
-      cubeOrders[cubeCode] += 1 / cubeMatches.length;
-    });
-  });
-  return cubeOrders;
-};
-
 const countSingleCubeMatches = (solution: MultiSolution): number => {
   const count = solution.filter(({ cubeMatches }) => cubeMatches.length === 1).length;
   // console.log({ count });
 
   return count;
 };
-
-// let arrays = [
-//   ['a1', 'a2', 'a3'],
-//   ['b1', 'b2', 'b3'],
-//   ['c1', 'c2', 'c3']
-// ];
-
-// for (let i = 0; i < arrays[0].length; i++) {
-//   for (let j = 0; j < arrays[1].length; j++) {
-//     for (let k = 0; k < arrays[2].length; k++) {
-//       console.log(arrays[0][i], arrays[1][j], arrays[2][k]);
-//     }
-//   }
-// }
-
-// let arrays = [['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], ['c1', 'c2', 'c3']];
 
 const tryAllCombinations = (arrays: string[][], cubeSet: CubeSet): string[] | null => {
   const pointers = new Array(arrays.length).fill(0); // array for the pointers, initialized as zero
@@ -249,6 +207,7 @@ const checkProposedSolution = (cubeCodes: string[], cubeSet: CubeSet): boolean =
 
   return true;
 };
+
 const bruteForceSolution = (multiCubeMatches: MultiSolution, cubeSet: CubeSet): Solution => {
   const sortedMultiCubeMatches = _.sortBy(multiCubeMatches, ({ cubeMatches }) => cubeMatches.length);
   const cubeCodes = sortedMultiCubeMatches.map(({ cubeMatches }) => cubeMatches.map(({ cubeCode }) => cubeCode));
@@ -263,6 +222,7 @@ const bruteForceSolution = (multiCubeMatches: MultiSolution, cubeSet: CubeSet): 
   }
   return [];
 };
+
 export const solveRoute = (route: Route, cubeSet: CubeSet): { solution: Solution, meta: CellRenderInfo[] } => {
   const result: Solution = [];
   // const singleCubeMatches: Solution = [];
@@ -314,6 +274,7 @@ export const solveRoute = (route: Route, cubeSet: CubeSet): { solution: Solution
   console.log({ multiCubeMatches });
   return { solution: result, meta: multiCubeMatches.map(({ coordinates }) => ({ coordinates, className: 'cubeMulti' })) };
 };
+
 export const renderSolution = ({ solution, meta }: { solution: Solution, meta: CellRenderInfo[] }): void => {
   const app = document.getElementById('app');
   const minX = solution.map(({ coordinates }) => coordinates.x).reduce((acc, x) => Math.min(acc, x), 0);
