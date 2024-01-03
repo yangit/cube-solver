@@ -8,18 +8,31 @@ export type Angle = 0 | 90 | 180 | 270;
 export interface Rule { in: { level: CubeLevel, side: CubeSide }, out: { level: CubeLevel, side: CubeSide }, bidirect?: boolean };
 
 export interface Cube { code: string, rules: Rule[],icon?:{file:string,x:number,y:number} }
-export interface Cell { coordinates: { x: number, y: number, z: number }, rules: Rule[] }
+export interface Coordinates {
+    x: number
+    y: number
+    z: number
+}
+export interface Cell { coordinates: Coordinates, rules: Rule[] }
+export interface SolutionCell {
+    coordinates: Coordinates
+    cubeCode: string
+    rotation: Angle
+    flipped: boolean
+}
 export interface CubeSet {
     name: string
     cubeCount?:number
     cubes: Record<string, number>
 }
-export interface CubeMatchRotataion {
+export interface CubeFlipRotataion {
+    cubeCode: string
     rotation: Angle
     flipped: boolean
 }
 export interface CubeMatchInfo {
     isMatch: boolean
-    matches: CubeMatchRotataion[]
+    cubeCode: string
+    flipRotations: CubeFlipRotataion[]
 }
 export type Route = Cell[];

@@ -1,5 +1,5 @@
 import cubes from "./cubes";
-import { Angle, Cell, Cube, CubeMatchInfo, CubeSet, Route, Rule } from "./types";
+import { Angle, Cell, Cube, CubeMatchInfo, CubeSet, Route, Rule, SolutionCell } from "./types";
 
 export const bidirectRule = (rule: Rule): Rule[] => {
     const result = [rule];
@@ -81,8 +81,8 @@ export const flipRotateAndCheckRule = ({ cube, rule, rotation, flipped }: { cube
     return flippedRotatedBidirectional.some(isEqualRules(rule));
 };
 
-export const findMatchFlipRotations = (cube: Cube, rule: Rule): CubeMatchInfo => {
-    const result: CubeMatchInfo = { isMatch: false, matches: [] };
+export const findFlipRotations = (cube: Cube, rule: Rule): CubeMatchInfo => {
+    const result: CubeMatchInfo = { isMatch: false, cubeCode: cube.code, flipRotations: [] };
     const bidirectionalRules = cube.rules.flatMap(bidirectRule);
 
     const angles: Angle[] = [0, 90, 180, 270];
@@ -90,7 +90,7 @@ export const findMatchFlipRotations = (cube: Cube, rule: Rule): CubeMatchInfo =>
         const found = bidirectionalRules.map(rotateRule(rotation)).some(isEqualRules(rule));
         if (found) {
             result.isMatch = true;
-            result.matches.push({ rotation, flipped: false });
+            result.flipRotations.push({ cubeCode: cube.code, rotation, flipped: false });
         }
     }
 
@@ -98,24 +98,24 @@ export const findMatchFlipRotations = (cube: Cube, rule: Rule): CubeMatchInfo =>
         const found = bidirectionalRules.map(flipRule).map(rotateRule(rotation)).some(isEqualRules(rule));
         if (found) {
             result.isMatch = true;
-            result.matches.push({ rotation, flipped: true });
+            result.flipRotations.push({ cubeCode: cube.code, rotation, flipped: true });
         }
     }
 
     return result;
 };
 
-export const findMatches = (cube: Cube, rules: Rule[]): CubeMatchInfo => {
-    const result: CubeMatchInfo = { isMatch: false, matches: [] };
-    const firstRuleMatch = findMatchFlipRotations(cube, rules[0]);
+export const findCubeToCellMatches = (cube: Cube, rules: Rule[]): CubeMatchInfo => {
+    const result: CubeMatchInfo = { isMatch: false, cubeCode: cube.code, flipRotations: [] };
+    const firstRuleMatch = findFlipRotations(cube, rules[0]);
     if (!firstRuleMatch.isMatch) {
         return result;
     }
 
-    firstRuleMatch.matches.forEach(({ flipped, rotation }) => {
+    firstRuleMatch.flipRotations.forEach(({ flipped, rotation }) => {
         if (rules.every(rule => flipRotateAndCheckRule({ cube, rule, rotation, flipped }))) {
             result.isMatch = true;
-            result.matches.push({ rotation, flipped });
+            result.flipRotations.push({ cubeCode: cube.code, rotation, flipped });
         }
     });
 
@@ -128,43 +128,31 @@ export const codeToCube = (code: string): Cube => {
     }
     return cube;
 }
-export const findMatchingCubes = (cell: Cell, cubeSet:CubeSet): Cube[] => {
-    return Object.keys(cubeSet.cubes).map(codeToCube).filter(cube => findMatches(cube, cell.rules).isMatch);
+export const findAllMatchesForCell = (cell: Cell, cubeSet: CubeSet): CubeMatchInfo[] => {
+    const result: CubeMatchInfo[] = [];
+
+    Object.keys(cubeSet.cubes).map(codeToCube).forEach(cube => {
+        const match = findCubeToCellMatches(cube, cell.rules)
+        if (match.isMatch){
+            result.push(match);
+        }
+    });
+    return result
 };
-export const solveRoute = (route: Route, cubeSet: CubeSet): string[] => {
-    // const usedCubeCount: Record<string, number> = {};
 
-    const result = route.map(cell => {
-        // // @ts-expect-error typescript is not smart enough to know that this is not null
-        // const availableCubes: Cube[] = cubeSet.cubes.map(([cubeCode, count]) => {
-        //     if (typeof usedCubeCount[cubeCode] === 'number') {
-        //         if (usedCubeCount[cubeCode] >= count) {
-        //             return null;
-        //         }
-        //     }
-        //     return codeToCube(cubeCode);
-        // }).filter(cube => cube !== null);
-
-        const found = findMatchingCubes(cell, cubeSet).map(cube => cube.code);
-        console.log('found',found);
-        if (found.length>0){
-            return found[0];
+export const solveRoute = (route: Route, cubeSet: CubeSet): SolutionCell[] => {
+    const result :SolutionCell[]=[];
+    route.forEach(cell => {
+        const matches = findAllMatchesForCell(cell, cubeSet)
+        const match = matches[0]
+        if (match){
+            const {cubeCode,rotation,flipped} = match.flipRotations[0]
+            return result.push({ coordinates: cell.coordinates, cubeCode, rotation, flipped });
         }else
         {
             throw new Error('Cannot find matching cube for cell');
         }
-       
     });
-    // console.log(usedCubeCount);
-    //// @ts-expect-error typescript is not smart enough to know that this is not null
-    // const availableCubes: Cube[] = cubeSet.cubes.map(([cube, count]) => {
-    //     if (typeof usedCubeCount[cube.code] === 'number') {
-    //         if (usedCubeCount[cube.code] >= count) {
-    //             return null;
-    //         }
-    //     }
-    //     return cube;
-    // }).filter(cube => cube !== null);
-    // console.log(availableCubes);
+  
     return result;
 };

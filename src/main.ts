@@ -7,16 +7,15 @@ const app = document.getElementById('app');
 // cuboroProRoute
 const solution = solveRoute(cuboroProRoute, cuboroProSet);
 console.log(solution)
-solution.forEach(cubeCode=> {
-    // console.log(cubeCode);
-    
+solution.forEach(({cubeCode,coordinates,flipped,rotation})=> {
+    const text = JSON.stringify({ ...coordinates, flipped: flipped ? flipped : undefined, rotation })
     const newDiv = document.createElement('div');
     newDiv.className = `cube-${cubeCode}`
+    var newContent = document.createTextNode(text);
+    newDiv.appendChild(newContent); 
     app?.appendChild(newDiv);
-    // console.log(app);
-    
 })
-console.log({ cuboroProSet, cuboroProRoute })
+// console.log({ cuboroProSet, cuboroProRoute })
 
 
 
