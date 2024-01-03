@@ -20,6 +20,7 @@ export interface SolutionCell {
   rotation: Angle
   flipped: boolean
 }
+export type MaybeSolutionCell = SolutionCell | null;
 export interface CubeSet {
   name: string
   cubeCount?: number

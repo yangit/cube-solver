@@ -1,5 +1,5 @@
 import cubes from './cubes';
-import { type Angle, type Cell, type Cube, type CubeMatchInfo, type CubeSet, type Route, type Rule, type SolutionCell } from './types';
+import { type MaybeSolutionCell, type Angle, type Cell, type Cube, type CubeMatchInfo, type CubeSet, type Route, type Rule, type SolutionCell } from './types';
 
 export const bidirectRule = (rule: Rule): Rule[] => {
   const result = [rule];
@@ -153,4 +153,63 @@ export const solveRoute = (route: Route, cubeSet: CubeSet): SolutionCell[] => {
   });
 
   return result;
+};
+export const renderSolution = (solution: SolutionCell[]): void => {
+  const app = document.getElementById('app');
+  const minX = solution.map(({ coordinates }) => coordinates.x).reduce((acc, x) => Math.min(acc, x), 0);
+  const maxX = solution.map(({ coordinates }) => coordinates.x).reduce((acc, x) => Math.max(acc, x), 0);
+  const minY = solution.map(({ coordinates }) => coordinates.y).reduce((acc, y) => Math.min(acc, y), 0);
+  const maxY = solution.map(({ coordinates }) => coordinates.y).reduce((acc, y) => Math.max(acc, y), 0);
+  const minZ = solution.map(({ coordinates }) => coordinates.z).reduce((acc, z) => Math.min(acc, z), 0);
+  const maxZ = solution.map(({ coordinates }) => coordinates.z).reduce((acc, z) => Math.max(acc, z), 0);
+  // z, y, x
+  const layers: HTMLTableCellElement[][][] = [];
+
+  for (let z = minZ; z <= maxZ; z++) {
+    const layer: HTMLTableCellElement[][] = [];
+    for (let y = minY; y <= maxY; y++) {
+      const row: HTMLTableCellElement[] = [];
+      for (let x = minX; x <= maxX; x++) {
+        const cell = solution.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === z);
+        const element = document.createElement('td');
+        if (typeof cell !== 'undefined') {
+          element.className = `cube-${cell.cubeCode}`;
+        } else {
+          element.className = 'cubeNone';
+          for (let zi = z + 1; zi <= maxZ; zi++) {
+            if (solution.find(({ coordinates }) => coordinates.x === x && coordinates.y === y && coordinates.z === zi) != null) {
+              element.className = 'cube-1';
+              break;
+            }
+          }
+        }
+        row.push(element);
+      }
+      layer.push(row);
+    }
+    layers.push(layer);
+  }
+
+  // render table
+  layers.forEach((layer, index) => {
+    const layerTable = document.createElement('table');
+    layerTable.className = `layer-${index}`;
+    layer.forEach(row => {
+      const newRow = document.createElement('tr');
+      row.forEach(cell => {
+        newRow.appendChild(cell);
+      });
+      layerTable.appendChild(newRow);
+    });
+    app?.appendChild(layerTable);
+    app?.appendChild(document.createElement('hr'));
+  });
+  // solution.forEach(({ cubeCode, coordinates, flipped, rotation }) => {
+  //   const text = JSON.stringify({ ...coordinates, flipped: flipped || undefined, rotation });
+  //   const newDiv = document.createElement('div');
+  //   newDiv.className = `cube-${cubeCode}`;
+  //   const newContent = document.createTextNode(text);
+  //   newDiv.appendChild(newContent);
+  //   app?.appendChild(newDiv);
+  // });
 };
